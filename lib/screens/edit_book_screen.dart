@@ -1,63 +1,76 @@
+// edit_book_screen.dart
 import 'package:flutter/material.dart';
+import '../models/book.dart';
 import 'package:provider/provider.dart';
 import '../providers/book_provider.dart';
-import '../models/book.dart';
 
 class EditBookScreen extends StatefulWidget {
   static const routeName = '/edit-book';
+
+  final Book? book;
+
+  EditBookScreen({this.book});
 
   @override
   _EditBookScreenState createState() => _EditBookScreenState();
 }
 
 class _EditBookScreenState extends State<EditBookScreen> {
-  final _form = GlobalKey<FormState>();
-  var _editedBook = Book(id: '', title: '', author: '');
-  var _isInit = true;
-  var _initValues = {
-    'title': '',
-    'author': '',
-    'rating': '0',
-    'isRead': 'false',
-  };
+  final _formKey = GlobalKey<FormState>();
+  late String _title;
+  late String _author;
+  late String _description;
 
   @override
-  void didChangeDependencies() {
-    if (_isInit) {
-      final bookId = ModalRoute.of(context)!.settings.arguments as String?;
-      if (bookId != null) {
-        _editedBook = Provider.of<BookProvider>(context, listen: false).findById(bookId);
-        _initValues = {
-          'title': _editedBook.title,
-          'author': _editedBook.author,
-          'rating': _editedBook.rating.toString(),
-          'isRead': _editedBook.isRead.toString(),
-        };
-      }
+  void initState() {
+    super.initState();
+    if (widget.book != null) {
+      _title = widget.book!.title;
+      _author = widget.book!.author;
+      _description = widget.book!.description;
+    } else {
+      _title = '';
+      _author = '';
+      _description = '';
     }
-    _isInit = false;
-    super.didChangeDependencies();
   }
 
-  Future<void> _saveForm() async {
-    final isValid = _form.currentState!.validate();
-    if (!isValid) {
-      return;
+  void _saveForm() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+      final bookProvider = Provider.of<BookProvider>(context, listen: false);
+
+      if (widget.book != null) {
+        bookProvider.updateBook(
+          widget.book!.id,
+          Book(
+            id: widget.book!.id,
+            title: _title,
+            author: _author,
+            description: _description,
+            rating: widget.book!.rating,
+            isRead: widget.book!.isRead,
+          ),
+        );
+      } else {
+        bookProvider.addBook(
+          Book(
+            id: DateTime.now().toString(),
+            title: _title,
+            author: _author,
+            description: _description,
+          ),
+        );
+      }
+      Navigator.of(context).pop();
     }
-    _form.currentState!.save();
-    if (_editedBook.id.isEmpty) {
-      await Provider.of<BookProvider>(context, listen: false).addBook(_editedBook);
-    } else {
-      await Provider.of<BookProvider>(context, listen: false).updateBook(_editedBook.id, _editedBook);
-    }
-    Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Edit Book'),
+        title: Text(widget.book != null ? 'Edit Book' : 'Add Book'),
         actions: [
           IconButton(
             icon: Icon(Icons.save),
@@ -66,78 +79,52 @@ class _EditBookScreenState extends State<EditBookScreen> {
         ],
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16),
         child: Form(
-          key: _form,
+          key: _formKey,
           child: ListView(
-            children: <Widget>[
+            children: [
               TextFormField(
-                initialValue: _initValues['title'],
+                initialValue: _title,
                 decoration: InputDecoration(labelText: 'Title'),
                 textInputAction: TextInputAction.next,
+                onSaved: (value) {
+                  _title = value!;
+                },
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Please provide a value.';
+                    return 'Please provide a title.';
                   }
                   return null;
                 },
-                onSaved: (value) {
-                  _editedBook = Book(
-                    id: _editedBook.id,
-                    title: value!,
-                    author: _editedBook.author,
-                    rating: _editedBook.rating,
-                    isRead: _editedBook.isRead,
-                  );
-                },
               ),
               TextFormField(
-                initialValue: _initValues['author'],
+                initialValue: _author,
                 decoration: InputDecoration(labelText: 'Author'),
                 textInputAction: TextInputAction.next,
+                onSaved: (value) {
+                  _author = value!;
+                },
                 validator: (value) {
                   if (value!.isEmpty) {
-                    return 'Please provide a value.';
+                    return 'Please provide an author.';
                   }
                   return null;
-                },
-                onSaved: (value) {
-                  _editedBook = Book(
-                    id: _editedBook.id,
-                    title: _editedBook.title,
-                    author: value!,
-                    rating: _editedBook.rating,
-                    isRead: _editedBook.isRead,
-                  );
                 },
               ),
               TextFormField(
-                initialValue: _initValues['rating'],
-                decoration: InputDecoration(labelText: 'Rating'),
-                keyboardType: TextInputType.number,
+                initialValue: _description,
+                decoration: InputDecoration(labelText: 'Description'),
+                maxLines: 3,
+                keyboardType: TextInputType.multiline,
+                onSaved: (value) {
+                  _description = value!;
+                },
                 validator: (value) {
-                  if (value!.isEmpty || int.tryParse(value) == null || int.parse(value) < 0 || int.parse(value) > 5) {
-                    return 'Please enter a valid rating between 0 and 5.';
+                  if (value!.isEmpty) {
+                    return 'Please provide a description.';
                   }
                   return null;
-                },
-                onSaved: (value) {
-                  _editedBook = Book(
-                    id: _editedBook.id,
-                    title: _editedBook.title,
-                    author: _editedBook.author,
-                    rating: int.parse(value!),
-                    isRead: _editedBook.isRead,
-                  );
-                },
-              ),
-              SwitchListTile(
-                title: Text('Read'),
-                value: _editedBook.isRead,
-                onChanged: (value) {
-                  setState(() {
-                    _editedBook.isRead = value;
-                  });
                 },
               ),
             ],
