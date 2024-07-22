@@ -1,7 +1,8 @@
-// book_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/book_provider.dart';
+import '../screens/add_book_screen.dart'; // Import AddBookScreen
 import '../screens/book_detail_screen.dart';
 import '../screens/edit_book_screen.dart';
 
@@ -34,49 +35,55 @@ class BookListScreen extends StatelessWidget {
                 child: Text('Sort by Author'),
                 value: 'author',
               ),
+              PopupMenuItem(
+                child: Text('Sort by Read Status'),
+                value: 'read',
+              ),
             ],
           ),
         ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Search',
-                border: OutlineInputBorder(),
-                suffixIcon: Icon(Icons.search),
-              ),
-              onChanged: (value) {
-                bookProvider.searchBooks(value);
-              },
-            ),
-          ),
           Expanded(
             child: ListView.builder(
               itemCount: books.length,
               itemBuilder: (ctx, index) {
                 final book = books[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(book.title, style: Theme.of(context).textTheme.bodyLarge),
-                    subtitle: Text(book.author),
-                    trailing: IconButton(
-                      icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.secondary),
-                      onPressed: () {
-                        bookProvider.deleteBook(book.id);
-                      },
-                    ),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (ctx) => BookDetailScreen(book.id),
-                        ),
-                      );
-                    },
+                return ListTile(
+                  title: Text(book.title),
+                  subtitle: Text(book.author),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (ctx) => EditBookScreen(book: book),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          bookProvider.deleteBook(book.id);
+                        },
+                      ),
+                      Icon(book.isRead
+                          ? Icons.check_box
+                          : Icons.check_box_outline_blank),
+                    ],
                   ),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (ctx) => BookDetailScreen(book.id),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -86,11 +93,7 @@ class BookListScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (ctx) => EditBookScreen(),
-            ),
-          );
+          Navigator.of(context).pushNamed(AddBookScreen.routeName);
         },
       ),
     );

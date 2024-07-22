@@ -1,8 +1,8 @@
-// book_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/book.dart';
+
 import '../helpers/db_helper.dart';
+import '../models/book.dart';
 
 class BookProvider with ChangeNotifier {
   List<Book> _books = [];
@@ -17,6 +17,8 @@ class BookProvider with ChangeNotifier {
       sortedBooks.sort((a, b) => a.title.compareTo(b.title));
     } else if (_sortOrder == 'author') {
       sortedBooks.sort((a, b) => a.author.compareTo(b.author));
+    } else if (_sortOrder == 'read') {
+      sortedBooks.sort((a, b) => a.isRead ? -1 : 1);
     }
 
     if (_searchQuery.isNotEmpty) {
