@@ -24,8 +24,8 @@ class MyApp extends StatelessWidget {
             theme: bookProvider.isDarkMode
                 ? ThemeData.dark()
                 : ThemeData.light().copyWith(
-                    scaffoldBackgroundColor: Colors.grey[200],
-                  ),
+              scaffoldBackgroundColor: Colors.grey[200],
+            ),
             home: HomeScreen(),
             routes: {
               EditBookScreen.routeName: (ctx) => EditBookScreen(),
@@ -61,6 +61,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var isDarkMode = Provider.of<BookProvider>(context).isDarkMode;
+
     return Scaffold(
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -75,7 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.lightBlue,
+        selectedItemColor: Colors.redAccent,
+        unselectedItemColor: isDarkMode ? Colors.white : Colors.red[100],
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
         onTap: _onItemTapped,
       ),
       floatingActionButton: FloatingActionButton(
@@ -83,6 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           Navigator.of(context).pushNamed(AddBookScreen.routeName);
         },
+        backgroundColor: Colors.redAccent,
       ),
     );
   }

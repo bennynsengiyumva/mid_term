@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/book_provider.dart';
+
+import '../models/book.dart';
 import '../screens/book_detail_screen.dart';
 import '../screens/edit_book_screen.dart';
-import '../models/book.dart';
 
 class BookItem extends StatelessWidget {
   final Book book;
